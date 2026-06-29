@@ -29,13 +29,26 @@ jobs:
           cd ios
           xcodegen generate
 
-      - name: Build Application
+      - name: Build and Package IPA
         run: |
           cd ios
           xcodebuild clean build \
             -project OpenWhoop.xcodeproj \
             -scheme OpenWhoop \
-            -destination "platform=iOS Simulator,name=iPhone 17,OS=latest" \
+            -destination "generic/platform=iOS" \
+            -configuration Release \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            CONFIGURATION_BUILD_DIR="$(pwd)/build"
+            
+          cd build
+          mkdir Payload
+          cp -R OpenWhoop.app Payload/
+          zip -r OpenWhoop.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenWhoop-IPA
+          path: ios/build/OpenWhoop.ipa
